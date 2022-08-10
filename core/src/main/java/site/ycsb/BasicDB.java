@@ -17,9 +17,12 @@
 
 package site.ycsb;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
@@ -52,6 +55,8 @@ public class BasicDB extends DB {
   protected boolean randomizedelay;
   protected int todelay;
   protected boolean count;
+
+  protected BufferedWriter out;
 
   public BasicDB() {
     todelay = 0;
@@ -109,6 +114,13 @@ public class BasicDB extends DB {
       }
       counter++;
     }
+
+    try {
+      Writer writer = new FileWriter(String.format("generated/shard-%d", Thread.currentThread().getId()));
+      out = new BufferedWriter(writer, 1048576);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   protected static final ThreadLocal<StringBuilder> TL_STRING_BUILDER = new ThreadLocal<StringBuilder>() {
@@ -137,18 +149,13 @@ public class BasicDB extends DB {
     delay();
 
     if (verbose) {
-      StringBuilder sb = getStringBuilder();
-      sb.append("READ ").append(table).append(" ").append(key).append(" [ ");
-      if (fields != null) {
-        for (String f : fields) {
-          sb.append(f).append(" ");
-        }
-      } else {
-        sb.append("<all fields>");
+      try {
+        out.write("READ ");
+        out.write(key.substring(4));
+        out.write("\n");
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
-
-      sb.append("]");
-      System.out.println(sb);
     }
 
     if (count) {
@@ -174,18 +181,15 @@ public class BasicDB extends DB {
     delay();
 
     if (verbose) {
-      StringBuilder sb = getStringBuilder();
-      sb.append("SCAN ").append(table).append(" ").append(startkey).append(" ").append(recordcount).append(" [ ");
-      if (fields != null) {
-        for (String f : fields) {
-          sb.append(f).append(" ");
-        }
-      } else {
-        sb.append("<all fields>");
+      try {
+        out.write("SCAN ");
+        out.write(startkey.substring(4));
+        out.write(" ");
+        out.write(recordcount);
+        out.write("\n");
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
-
-      sb.append("]");
-      System.out.println(sb);
     }
     
     if (count) {
@@ -208,15 +212,13 @@ public class BasicDB extends DB {
     delay();
 
     if (verbose) {
-      StringBuilder sb = getStringBuilder();
-      sb.append("UPDATE ").append(table).append(" ").append(key).append(" [ ");
-      if (values != null) {
-        for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
-          sb.append(entry.getKey()).append("=").append(entry.getValue()).append(" ");
-        }
+      try {
+        out.write("UPDATE ");
+        out.write(key.substring(4));
+        out.write("\n");
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
-      sb.append("]");
-      System.out.println(sb);
     }
 
     if (count) {
@@ -239,16 +241,13 @@ public class BasicDB extends DB {
     delay();
 
     if (verbose) {
-      StringBuilder sb = getStringBuilder();
-      sb.append("INSERT ").append(table).append(" ").append(key).append(" [ ");
-      if (values != null) {
-        for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
-          sb.append(entry.getKey()).append("=").append(entry.getValue()).append(" ");
-        }
+      try {
+        out.write("INSERT ");
+        out.write(key.substring(4));
+        out.write("\n");
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
-
-      sb.append("]");
-      System.out.println(sb);
     }
 
     if (count) {
@@ -295,6 +294,11 @@ public class BasicDB extends DB {
         System.out.println("[INSERTS], Uniques, " + inserts.size());
         System.out.println("[DELETES], Uniques, " + deletes.size());
       }
+    }
+    try {
+      out.close();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
   

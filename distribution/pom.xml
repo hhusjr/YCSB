@@ -39,6 +39,7 @@ LICENSE file.
       <artifactId>core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!--
     <dependency>
       <groupId>site.ycsb</groupId>
       <artifactId>accumulo1.9-binding</artifactId>
@@ -264,7 +265,7 @@ LICENSE file.
       <artifactId>zookeeper-binding</artifactId>
       <version>${project.version}</version>
     </dependency>
-
+-->
   </dependencies>
   <build>
     <plugins>
